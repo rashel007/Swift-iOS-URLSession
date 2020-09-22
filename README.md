@@ -1,5 +1,5 @@
 # URLSessionDemo
-Basics of swift ios URLSession GET POST request .First we will check the basic and simple way to doing get post request using URLSession. Then we will check much cleaner way for callign api request in real life application
+Basics of swift ios URLSession GET POST request . First we will check the basic and simple way to doing get post request using URLSession. Then we will check much cleaner way for callign api request in real life application
 
 
 ### Simple get request using urlsession
@@ -272,4 +272,8 @@ func queryParameterAdvanced(color: String, model: String) {
 }
 ```
 
+
+
+### Tutorial link 
+1. [Code Cat Youtube Play list](https://www.youtube.com/watch?v=-7EyKipJltc&list=PLb5R4QC2DtFuXr4177KQ2lIXOkqwq97a4&index=1)
 
