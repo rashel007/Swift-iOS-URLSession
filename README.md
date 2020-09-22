@@ -1,6 +1,14 @@
 # URLSessionDemo
 Basics of swift ios URLSession GET POST request . First we will check the basic and simple way to doing get post request using URLSession. Then we will check much cleaner way for callign api request in real life application
 
+### Tech Stack
+1. swift 5
+2. URLSession
+3. JsonSerialization
+4. Encodable / Decodable
+5. URLComponents
+6. Generics
+7. Closures
 
 ### Simple get request using urlsession
 
