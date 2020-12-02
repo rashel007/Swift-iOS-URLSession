@@ -10,7 +10,19 @@ Basics of swift ios URLSession GET POST request . First we will check the basic 
 6. Generics
 7. Closures
 
-### Simple get request using urlsession
+
+
+## Table Of Content
+1. [Simple get request using urlsession](#simpleget)<br/>
+2. [Simple post request](#simplepost)<br/>
+3. [Cleaner way for networking using Encodable & Decodable and Generics & Closures](#cleanerway)<br/>
+4. [Passing query parameters](#queryparameter)<br/>
+5. [Pass query parameter dynamically](#dynamicqueryparameter)<br/>
+6. [Download file with pause resume cancel](#downloadfile)<br/>
+
+
+
+### Simple get request using urlsession<a name="simpleget">
 
 ```swift
 func getData() {
@@ -39,7 +51,7 @@ func getData() {
 
 
 
-### Simple post request
+### Simple post request <a name="simplepost"/>
 ```swift
 func postData() {
     
@@ -68,7 +80,7 @@ func postData() {
 ```
 
 
-### cleaner way for networking using Encodable & Decodable and Generics & Closures
+### Cleaner way for networking using Encodable & Decodable and Generics & Closures <a name="cleanerway"/>
 
 
 #### our sample respone
@@ -195,7 +207,7 @@ class ViewModel {
 ```
 
 
-### Passing query parameters
+### Passing query parameters <a name="queryparameter"/>
 
 ```swift
 func queryParameterInUrlExample(color: String, model: String) {
@@ -219,7 +231,7 @@ func queryParameterInUrlExample(color: String, model: String) {
 }
 ```
 
-### Pass query parameter dynamically
+### Pass query parameter dynamically <a name="dynamicqueryparameter"/>
 
 ```swift
 struct QueryPatameterItem: Encodable {
@@ -279,6 +291,113 @@ func queryParameterAdvanced(color: String, model: String) {
     
 }
 ```
+
+
+# Download file with pause resume cancel <a name="downloadfile"/>
+
+```swift
+protocol SongDownloadDelegate {
+    func downloadPercentage(parcentage: Float)
+    func downloadState(state: DownloadState)
+}
+
+enum DownloadState {
+    case waiting
+    case downloading
+    case pause
+    case finished
+    case canceled
+}
+
+
+class SongDownload: NSObject {
+    
+    var downloadTask: URLSessionDownloadTask?
+    var downloadURL: URL?
+    var downloadLocation: URL?
+    var resumeData: Data?
+    
+    var delegate: SongDownloadDelegate?
+  
+    
+    lazy var urlSession: URLSession  = {
+        let confirguration = URLSessionConfiguration.default
+        return URLSession(configuration: confirguration, delegate: self, delegateQueue: nil)
+    }()
+    
+    
+    func getSongAtUrl(_ item: URL) {
+        downloadURL = item
+        downloadTask = urlSession.downloadTask(with: item)
+        downloadTask?.resume()
+        delegate?.downloadState(state: .downloading)
+    }
+    
+    func cancel() {
+        downloadTask?.cancel()
+        delegate?.downloadState(state: .canceled)
+    }
+    
+    func pause() {
+        downloadTask?.cancel(byProducingResumeData: { (data) in
+            DispatchQueue.main.async {
+                self.resumeData = data
+                self.delegate?.downloadState(state: .pause)
+            }
+        })
+    }
+    
+    func resume() {
+        guard let resumeData = resumeData else {
+            return
+        }
+        downloadTask = self.urlSession.downloadTask(withResumeData: resumeData)
+        downloadTask?.resume()
+        delegate?.downloadState(state: .downloading)
+    }
+}
+
+extension SongDownload: URLSessionDownloadDelegate {
+    
+    
+    func urlSession(_ session: URLSession, downloadTask: URLSessionDownloadTask, didWriteData bytesWritten: Int64, totalBytesWritten: Int64, totalBytesExpectedToWrite: Int64) {
+        DispatchQueue.main.async {
+            self.delegate?.downloadPercentage(parcentage: Float(totalBytesWritten) / Float(totalBytesExpectedToWrite))
+        }
+    }
+    
+    
+    func urlSession(_ session: URLSession, downloadTask: URLSessionDownloadTask, didFinishDownloadingTo location: URL) {
+        
+        let fileManager = FileManager.default
+        guard let documentsPath = fileManager.urls(for: .documentDirectory, in: .userDomainMask).first,
+              let lastPathComponent = downloadURL?.lastPathComponent else {
+            fatalError()
+        }
+        
+        let destinationUrl = documentsPath.appendingPathComponent(lastPathComponent)
+        
+        do{
+            if fileManager.fileExists(atPath: destinationUrl.path) {
+                try fileManager.removeItem(at: destinationUrl)
+            }
+            
+            try fileManager.copyItem(at: location, to: destinationUrl)
+            
+            DispatchQueue.main.async {
+                self.delegate?.downloadState(state: .finished)
+                self.downloadLocation = destinationUrl
+            }
+        }catch{
+            print(error)
+        }
+    }
+    
+    
+}
+```
+
+
 
 
 
